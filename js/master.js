@@ -26,26 +26,26 @@ var isPlaying = false;
 var stopOnNextAnimationStep = false;
 
 //Document ready function for when the page is ready.
-$(document).ready(function() {
+$(document).ready(function () {
     //Get the DOM elements that are needed often.
-	point = $('#point');
+    point = $('#point');
     sound = document.getElementById('beep');
 
-	//Set the background and selected item sized according to the desired width.
-	$('#itemBackground').css({
-        "background-size"  : imgWidth + "px " + imgWidth + "px"
+    //Set the background and selected item sized according to the desired width.
+    $('#itemBackground').css({
+        "background-size": imgWidth + "px " + imgWidth + "px"
     });
     point.width(imgWidth);
     point.height(imgWidth);
-  
-	//We want to handle mouse clicks.
-	$(document).click(function(e) {
+
+    //We want to handle mouse clicks.
+    $(document).click(function (e) {
         calculateInitialPosition(e);
-	});	
+    });
 });
 
 function calculateInitialPosition(eventParams) {
-    if(isPlaying) {
+    if (isPlaying) {
         stopOnNextAnimationStep = true;
     }
     isPlaying = true;
@@ -62,8 +62,8 @@ function calculateInitialPosition(eventParams) {
     var remY = eventParams.clientY % imgHalf;
 
     //Use the remainder to see if we want to adjust the location.
-    var addX = remX >= imgQuart ? imgHalf: 0;
-    var addY = remY >= imgQuart ? imgHalf: 0;
+    var addX = remX >= imgQuart ? imgHalf : 0;
+    var addY = remY >= imgQuart ? imgHalf : 0;
 
     //Get the first rough positions for the selected point.
     var nearX = (divX * imgHalf) + addX;
@@ -77,14 +77,14 @@ function calculateInitialPosition(eventParams) {
 
     //Adjust only when not both X and Y are incorrect. When they are both incorrect we are actually correct!
     //This is because we then want to fill in a point that is located between four other points.
-    if(correctX === false && correctY === true) {
-        if(remX > 0) {
+    if (correctX === false && correctY === true) {
+        if (remX > 0) {
             exactX += imgHalf;
         } else {
             exactX -= imgHalf;
         }
-    } else if(correctY === false && correctX === true) {
-        if(remY > 0) {
+    } else if (correctY === false && correctX === true) {
+        if (remY > 0) {
             exactY += imgHalf;
         } else {
             exactY -= imgHalf;
@@ -102,18 +102,18 @@ function calculateInitialPosition(eventParams) {
 
 function animateImplosionEffect(depth, xCoord, yCoord) {
     console.log("LOG: DEBUG ==> Animating implosion effect => depth : " + depth);
-    point.css({left:xCoord - imgHalf ,top:yCoord - imgHalf});
+    point.css({left: xCoord - imgHalf, top: yCoord - imgHalf});
     point.show();
 
     //Each animation step has a given timeout.
-    setTimeout(function (){
-        if(depth === 0) {
+    setTimeout(function () {
+        if (depth === 0) {
             //Set the selected point's location and make it visible.
             //Top and Left of each image are 50 pixels before the center.
-            point.css({left:xCoord - imgHalf ,top:yCoord - imgHalf});
+            point.css({left: xCoord - imgHalf, top: yCoord - imgHalf});
             point.show();
             //Start animation moving the selected point.
-            animateFromSelection(xCoord,yCoord);
+            animateFromSelection(xCoord, yCoord);
             //Proceed with fading out the items.
             recursiveFadeOut();
         } else {
@@ -130,9 +130,9 @@ function animateImplosionEffect(depth, xCoord, yCoord) {
 }
 
 function recursiveFadeOut() {
-    setTimeout(function() {
+    setTimeout(function () {
         var canStillFade = fadeOlderDepths(neighbourCollection);
-        if(canStillFade) {
+        if (canStillFade) {
             recursiveFadeOut();
         } else {
             //Remove the previous neighbours.
@@ -142,21 +142,21 @@ function recursiveFadeOut() {
 }
 
 function fadeOlderDepths(depthCollection) {
-    for(var i = 0 ; i < depthCollection.length ; i++) {
+    for (var i = 0; i < depthCollection.length; i++) {
         var items = depthCollection[i];
-        for(var j = 0 ; j < items.length ; j++) {
+        for (var j = 0; j < items.length; j++) {
             var item = items[j];
             console.log();
             var newOp = parseFloat(item.css('opacity'));
-            newOp = newOp <= 0.1 ? 0: newOp - 0.1;
+            newOp = newOp <= 0.1 ? 0 : newOp - 0.1;
             item.css({ opacity: newOp });
 
             //Check to break of the fade is the last item to be faded is also at opacity 0!
-            if(i === (depthCollection.length - 1) && j === (item.length - 1)) {
-                if(newOp === 0) {
+            if (i === (depthCollection.length - 1) && j === (item.length - 1)) {
+                if (newOp === 0) {
                     return false;
                 }
-            } else if(j === (item.length - 1) && newOp === 0) {
+            } else if (j === (item.length - 1) && newOp === 0) {
                 //Replace the array of the already fully faded items with an empty array.
                 neighbourCollection[i] = [];
             }
@@ -167,11 +167,11 @@ function fadeOlderDepths(depthCollection) {
 
 function animateFromSelection(xCoord, yCoord) {
     //Each animation step has a given timeout.
-	setTimeout(function (){
+    setTimeout(function () {
         //Check to see if the animation has been completed! (when the point goes offscreen or the stopOnNextAnimationStep is true.
-        if(xCoord < 0 || yCoord < 0 || stopOnNextAnimationStep) {
+        if (xCoord < 0 || yCoord < 0 || stopOnNextAnimationStep) {
             console.log("LOG: DEBUG ==> Animation completed!");
-            if(stopOnNextAnimationStep) {
+            if (stopOnNextAnimationStep) {
                 stopOnNextAnimationStep = false;
             } else {
                 isPlaying = false;
@@ -181,21 +181,21 @@ function animateFromSelection(xCoord, yCoord) {
 
         var x = xCoord, y = yCoord;
         //Small random generator trick to make the animation differ in motion a bit.
-        var rand = Math.floor((Math.random()*10)+1);
-        if(rand > 5) {
+        var rand = Math.floor((Math.random() * 10) + 1);
+        if (rand > 5) {
             x -= imgWidth;
         } else {
             y -= imgWidth;
         }
-        point.css({left:x - imgHalf ,top:y - imgHalf});
+        point.css({left: x - imgHalf, top: y - imgHalf});
 
         //If the sound was previously playing, reset and play it again.
         sound.currentTime = 0;
         sound.play();
 
         //Continue to the next step in the animation.
-		animateFromSelection(x,y);
-	}, timeStep);
+        animateFromSelection(x, y);
+    }, timeStep);
 }
 
 function showNeighbours(points, xCoord, yCoord, depth) {
@@ -203,13 +203,13 @@ function showNeighbours(points, xCoord, yCoord, depth) {
     var pointsX = points[0];
     var pointsY = points[1];
 
-    for(var i = 0 ; i < pointsX.length ; i++) {
+    for (var i = 0; i < pointsX.length; i++) {
         var id = "nb-" + "d" + depth + "-" + (i + 1);
-        $('#point').clone().attr('id',id).appendTo('body');
-        var item = $('#'+ id);
+        $('#point').clone().attr('id', id).appendTo('body');
+        var item = $('#' + id);
         item.css({
-            left:(pointsX[i] * imgHalf) + xCoord - imgHalf ,
-            top:(pointsY[i] * imgHalf) + yCoord - imgHalf
+            left: (pointsX[i] * imgHalf) + xCoord - imgHalf,
+            top: (pointsY[i] * imgHalf) + yCoord - imgHalf
         });
         items[i] = item;
     }
@@ -218,11 +218,11 @@ function showNeighbours(points, xCoord, yCoord, depth) {
 
 function removeNeighbours(optionalDepth) {
     var idString = "[id^=nb-";
-    if(typeof optionalDepth !== "undefined") {
+    if (typeof optionalDepth !== "undefined") {
         idString += "d" + optionalDepth + "-";
     }
     idString += "]";
-    $(idString).each(function() {
+    $(idString).each(function () {
         $(this).remove();
     });
 }
