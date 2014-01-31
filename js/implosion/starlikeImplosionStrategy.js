@@ -6,7 +6,10 @@ StarlikeImplosionStrategy.prototype.calculateNeighbours = function(neighbourDist
 };
 
 StarlikeImplosionStrategy.prototype.calculateRectangularNeighbours = function(neighbourDistance) {
-    neighbourDistance =  Math.floor(neighbourDistance/2);
+    //TODO: divFac tends to draw multiple images over eachother as the neighbourDistance nears 1!
+    //TODO: for now keep the divFac set to 1!
+    var divFac = 1;
+    neighbourDistance = Math.floor(neighbourDistance / divFac);
 
     var pointNum = 0;
     var pointsX = [];
@@ -14,8 +17,8 @@ StarlikeImplosionStrategy.prototype.calculateRectangularNeighbours = function(ne
 
     var x1, x2, y1, y2 = 0;
 
-    var n = neighbourDistance * 4 - 2
-    for(var i = 0 ; i < neighbourDistance * 4 - 1 ; i++) {
+    var n = (neighbourDistance * (4 / divFac)) - 2;
+    for(var i = 0 ; i < neighbourDistance * (4 / divFac) - 1 ; i++) {
         x1 = 0 - n;
         y1 = 0 - i;
         x2 = n;
@@ -29,8 +32,8 @@ StarlikeImplosionStrategy.prototype.calculateRectangularNeighbours = function(ne
         n--;
     }
 
-    n = neighbourDistance * 4 - 6
-    for(var j = 0 ; j < neighbourDistance * 4 - 3 ; j++) {
+    n = (neighbourDistance *  (4 / divFac)) - 6;
+    for(var j = 0 ; j < neighbourDistance * (4 / divFac) - 3 ; j++) {
         x1 = n + 3;
         y1 = 0 - (j + 1);
         x2 = 0 - (n + 3);
