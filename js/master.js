@@ -9,6 +9,7 @@
 //===========================================================================
 var imgWidth = 25;
 var timeStep = 100;
+var implosionDepth = 10;
 var implosion = new Implosion(new RectangularImplosionStrategy());
 //var implosion = new Implosion(new StarlikeImplosionStrategy());
 //===========================================================================
@@ -96,7 +97,7 @@ function calculateInitialPosition(eventParams) {
     neighbourCollection = [];
     removeNeighbours();
     //Start the implosion effect.
-    animateImplosionEffect(10, exactX, exactY);
+    animateImplosionEffect(implosionDepth, exactX, exactY);
 }
 
 function animateImplosionEffect(depth, xCoord, yCoord) {
