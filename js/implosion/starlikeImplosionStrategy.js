@@ -6,11 +6,19 @@ StarlikeImplosionStrategy.prototype.calculateNeighbours = function (neighbourDis
     return this.calculateRectangularNeighbours(neighbourDistance);
 };
 
+var prevNeigbourDistance = -1;
 StarlikeImplosionStrategy.prototype.calculateRectangularNeighbours = function (neighbourDistance) {
-    //TODO: divFac tends to draw multiple images over eachother as the neighbourDistance nears 1!
-    //TODO: for now keep the divFac set to 1!
-    var divFac = 1;
+    var divFac = 2;
     neighbourDistance = Math.floor(neighbourDistance / divFac);
+
+    //Check if the newly calculated neighbour distance is equal to the previous one.
+    //If it is not equal continue to the next step and calculate the points.
+    //Otherwise return no points and skip the current depth.
+    if(prevNeigbourDistance === -1 || prevNeigbourDistance !== neighbourDistance) {
+        prevNeigbourDistance = neighbourDistance;
+    } else {
+        return [[],[]];
+    }
 
     var pointNum = 0;
     var pointsX = [];

@@ -10,8 +10,8 @@
 var imgWidth = 25;
 var timeStep = 100;
 var implosionDepth = 10;
-var implosion = new Implosion(new RectangularImplosionStrategy());
-//var implosion = new Implosion(new StarlikeImplosionStrategy());
+//var implosion = new Implosion(new RectangularImplosionStrategy());
+var implosion = new Implosion(new StarlikeImplosionStrategy());
 //===========================================================================
 //===========================================================================
 //===========================================================================
@@ -21,6 +21,7 @@ var imgQuart = imgWidth / 4;
 
 var point;
 var sound;
+var fadeCount = 0;
 var neighbourCollection = [];
 var isPlaying = false;
 var stopOnNextAnimationStep = false;
@@ -95,6 +96,7 @@ function calculateInitialPosition(eventParams) {
     console.log("LOG: DEBUG ==> Starting selected point animation");
     //Clear the collections for fade and remove any old neighbours.
     neighbourCollection = [];
+    fadeCount = 10;
     removeNeighbours();
     //Start the implosion effect.
     animateImplosionEffect(implosionDepth, exactX, exactY);
@@ -131,8 +133,7 @@ function animateImplosionEffect(depth, xCoord, yCoord) {
 
 function recursiveFadeOut() {
     setTimeout(function () {
-        var canStillFade = fadeOlderDepths(neighbourCollection);
-        if (canStillFade) {
+        if (fadeOlderDepths(neighbourCollection)) {
             recursiveFadeOut();
         } else {
             //Remove the previous neighbours.
@@ -152,17 +153,19 @@ function fadeOlderDepths(depthCollection) {
             item.css({ opacity: newOp });
 
             //Check to break of the fade is the last item to be faded is also at opacity 0!
-            if (i === (depthCollection.length - 1) && j === (item.length - 1)) {
-                if (newOp === 0) {
-                    return false;
-                }
-            } else if (j === (item.length - 1) && newOp === 0) {
-                //Replace the array of the already fully faded items with an empty array.
+            if (j === (items.length - 1) && newOp === 0) {
+                //Replace the array of the already fully faded items with an empty array and remove those neighbours already.
+                removeNeighbours(depthCollection.length - i);
                 neighbourCollection[i] = [];
             }
         }
     }
-    return true;
+    if(fadeCount < 1) {
+        return false;
+    } else {
+        fadeCount--;
+        return true;
+    }
 }
 
 function animateFromSelection(xCoord, yCoord) {
@@ -209,7 +212,8 @@ function showNeighbours(points, xCoord, yCoord, depth) {
         var item = $('#' + id);
         item.css({
             left: (pointsX[i] * imgHalf) + xCoord - imgHalf,
-            top: (pointsY[i] * imgHalf) + yCoord - imgHalf
+            top: (pointsY[i] * imgHalf) + yCoord - imgHalf,
+            opacity: 1
         });
         items[i] = item;
     }
