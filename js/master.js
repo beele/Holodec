@@ -8,7 +8,7 @@
 //============================== SETTINGS ===================================
 //===========================================================================
 var imgWidth = 25;
-var timeStep = 100;
+var timeStep = 1000;
 var implosionDepth = 10;
 //var implosion = new Implosion(new RectangularImplosionStrategy());
 var implosion = new Implosion(new StarlikeImplosionStrategy());
@@ -96,7 +96,6 @@ function calculateInitialPosition(eventParams) {
     console.log("LOG: DEBUG ==> Starting selected point animation");
     //Clear the collections for fade and remove any old neighbours.
     neighbourCollection = [];
-    fadeCount = 10;
     removeNeighbours();
     //Start the implosion effect.
     animateImplosionEffect(implosionDepth, exactX, exactY);
@@ -117,13 +116,14 @@ function animateImplosionEffect(depth, xCoord, yCoord) {
             //Start animation moving the selected point.
             animateFromSelection(xCoord, yCoord);
             //Proceed with fading out the items.
+            fadeCount = implosionDepth;
             recursiveFadeOut();
         } else {
             //Remove the previous neighbours.
             //removeNeighbours();
             //Calculate (according to the set strategy) and show the next neighbours.
             neighbourCollection.push(showNeighbours(implosion.calculateNeighbours(depth), xCoord, yCoord, depth));
-            fadeOlderDepths(neighbourCollection);
+            fadeOlderDepths(neighbourCollection, false);
             //Continue to the next step in the animation.
             animateImplosionEffect(--depth, xCoord, yCoord);
         }
@@ -133,7 +133,7 @@ function animateImplosionEffect(depth, xCoord, yCoord) {
 
 function recursiveFadeOut() {
     setTimeout(function () {
-        if (fadeOlderDepths(neighbourCollection)) {
+        if (fadeOlderDepths(neighbourCollection, true)) {
             recursiveFadeOut();
         } else {
             //Remove the previous neighbours.
@@ -142,7 +142,8 @@ function recursiveFadeOut() {
     }, timeStep / 10);
 }
 
-function fadeOlderDepths(depthCollection) {
+function fadeOlderDepths(depthCollection, performStopCheck) {
+    console.log("LOG: DEBUG ==> Fading older depths.");
     for (var i = 0; i < depthCollection.length; i++) {
         var items = depthCollection[i];
         for (var j = 0; j < items.length; j++) {
@@ -160,7 +161,7 @@ function fadeOlderDepths(depthCollection) {
             }
         }
     }
-    if(fadeCount < 1) {
+    if(fadeCount < 1 && performStopCheck) {
         return false;
     } else {
         fadeCount--;
@@ -171,6 +172,7 @@ function fadeOlderDepths(depthCollection) {
 function animateFromSelection(xCoord, yCoord) {
     //Each animation step has a given timeout.
     setTimeout(function () {
+        console.log("LOG: DEBUG ==> Animating point to new position.");
         //Check to see if the animation has been completed! (when the point goes offscreen or the stopOnNextAnimationStep is true.
         if (xCoord < 0 || yCoord < 0 || stopOnNextAnimationStep) {
             console.log("LOG: DEBUG ==> Animation completed!");
