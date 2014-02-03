@@ -8,7 +8,7 @@
 //============================== SETTINGS ===================================
 //===========================================================================
 var imgWidth = 25;
-var timeStep = 1000;
+var timeStep = 100;
 var implosionDepth = 10;
 //var implosion = new Implosion(new RectangularImplosionStrategy());
 var implosion = new Implosion(new StarlikeImplosionStrategy());
