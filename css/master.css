@@ -3,6 +3,10 @@ body {
     background-color: rgba(8, 23, 44, 1);
 }
 
+#point {
+    display: none;
+}
+
 .item {
     position: absolute;
 }

@@ -10,7 +10,7 @@
 var imgWidth = 25;
 var timeStep = 100;
 var implosionDepth = 10;
-var allowSimultaneousAnimations = false;
+var allowSimultaneousAnimations = true;
 //var implosion = new Implosion(new RectangularImplosionStrategy());
 var implosion = new Implosion(new StarlikeImplosionStrategy());
 //===========================================================================
@@ -42,7 +42,7 @@ $(document).ready(function () {
     $(document).click(function (e) {
         if(animation !== null && allowSimultaneousAnimations === false) {
             if(animation.isPlaying() === true) {
-                animation.stopAnimation(true);
+                animation.stopAnimation();
             }
         }
         animation = new Animation(e);
@@ -56,6 +56,12 @@ function Animation(eventParams) {
     var neighbourCollection = [];
     var isPlaying = true;
     var stopOnNextAnimationStep = false;
+
+    //Create a new point clone and use that for the current animation.
+    var pointName = "point-" + clickID;
+    $('#point').clone().attr('id', pointName).appendTo('body');
+    var point = $('#' + pointName);
+    point.show();
 
     console.log("=================================================================");
     console.log("=================================================================");
@@ -198,6 +204,7 @@ function Animation(eventParams) {
             //Check to see if the animation has been completed! (when the point goes off screen or the stopOnNextAnimationStep is true.
             if (xCoord < 0 || yCoord < 0 || stopOnNextAnimationStep) {
                 console.log("LOG: DEBUG ==> Animation completed!");
+                point.remove();
                 isPlaying = false;
                 if (stopOnNextAnimationStep) {
                     stopOnNextAnimationStep = false;
@@ -275,10 +282,9 @@ function Animation(eventParams) {
 
         /**
          * Setter for the stopOnNextAnimationStep local variable.
-         * @param value Boolean : pass true to stop the animation on the next animation step.
          */
-        stopAnimation: function(value) {
-            stopOnNextAnimationStep = value;
+        stopAnimation: function() {
+            stopOnNextAnimationStep = true
         }
     }
 }
