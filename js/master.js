@@ -107,6 +107,9 @@ function Animation(eventParams) {
     animateImplosionEffect();
 
     //Inner functions
+    /**
+     * Recursive function that animates the implosion effect.
+     */
     function animateImplosionEffect() {
         console.log("LOG: DEBUG ==> Animating implosion effect => depth : " + currentDepth);
         point.css({left: exactX - imgHalf, top: exactY - imgHalf});
@@ -125,8 +128,6 @@ function Animation(eventParams) {
                 fadeCount = implosionDepth;
                 recursiveFadeOut();
             } else {
-                //Remove the previous neighbours.
-                //removeNeighbours();
                 //Calculate (according to the set strategy) and show the next neighbours.
                 neighbourCollection.push(showNeighbours(implosion.calculateNeighbours(currentDepth)));
                 fadeOlderDepths(neighbourCollection, false);
@@ -138,6 +139,9 @@ function Animation(eventParams) {
         }, timeStep / 5);
     }
 
+    /**
+     * Recursive function that fades out the implosion effect.
+     */
     function recursiveFadeOut() {
         setTimeout(function () {
             if (fadeOlderDepths(neighbourCollection, true)) {
@@ -149,6 +153,12 @@ function Animation(eventParams) {
         }, timeStep / 10);
     }
 
+    /**
+     * Function called from recursiveFadeOut() to fade the neighbours that have been animated and now have to be faded.
+     * @param performStopCheck If true the function will see if the fade needs to animate further.
+     * @param depthCollection An array containing an array of neighbours for each depth level.
+     * @returns {boolean} true if the fade is completely done.
+     */
     function fadeOlderDepths(depthCollection, performStopCheck) {
         console.log("LOG: DEBUG ==> Fading older depths.");
         for (var i = 0; i < depthCollection.length; i++) {
@@ -168,7 +178,7 @@ function Animation(eventParams) {
                 }
             }
         }
-        if(fadeCount < 1 && performStopCheck) {
+        if(performStopCheck && fadeCount < 1) {
             return false;
         } else {
             fadeCount--;
@@ -176,11 +186,16 @@ function Animation(eventParams) {
         }
     }
 
+    /**
+     * Recursive function for animating the single point after the implosion.
+     * @param xCoord The starting or previously calculated single point (x coordinate)
+     * @param yCoord The starting or previously calculated single point (y coordinate)
+     */
     function animateFromSelection(xCoord, yCoord) {
         //Each animation step has a given timeout.
         setTimeout(function () {
             console.log("LOG: DEBUG ==> Animating point to new position.");
-            //Check to see if the animation has been completed! (when the point goes offscreen or the stopOnNextAnimationStep is true.
+            //Check to see if the animation has been completed! (when the point goes off screen or the stopOnNextAnimationStep is true.
             if (xCoord < 0 || yCoord < 0 || stopOnNextAnimationStep) {
                 console.log("LOG: DEBUG ==> Animation completed!");
                 isPlaying = false;
@@ -209,6 +224,11 @@ function Animation(eventParams) {
         }, timeStep);
     }
 
+    /**
+     * Will show the neighbours for the points in the passes points array.
+     * @param points contains two sub arrays containing X and Y positions respectively.
+     * @returns {Array} an array containing the newly created neighbours.
+     */
     function showNeighbours(points) {
         var items = [];
         var pointsX = points[0];
@@ -228,6 +248,10 @@ function Animation(eventParams) {
         return items;
     }
 
+    /**
+     * Will remove all neighbours for the current Animation object.
+     * @param optionalDepth If the optionalDepth parameter is passed only the neighbours with a matching depth will be removed.
+     */
     function removeNeighbours(optionalDepth) {
         var idString = "[id^=nb-" + clickID;
         if (typeof optionalDepth !== "undefined") {
@@ -239,11 +263,20 @@ function Animation(eventParams) {
         });
     }
 
+    //Closure getters & setters to allow checks for simultaneous animations.
     return {
+        /**
+         * Getter for the isPlaying local variable.
+         * @returns {boolean} true if the animation if playing, false if not.
+         */
         isPlaying: function() {
             return isPlaying;
         },
 
+        /**
+         * Setter for the stopOnNextAnimationStep local variable.
+         * @param value Boolean : pass true to stop the animation on the next animation step.
+         */
         stopAnimation: function(value) {
             stopOnNextAnimationStep = value;
         }
