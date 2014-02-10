@@ -10,6 +10,7 @@
 var imgWidth = 25;
 var timeStep = 100;
 var implosionDepth = 10;
+var allowSimultaneousAnimations = false;
 //var implosion = new Implosion(new RectangularImplosionStrategy());
 var implosion = new Implosion(new StarlikeImplosionStrategy());
 //===========================================================================
@@ -21,10 +22,7 @@ var imgQuart = imgWidth / 4;
 
 var point;
 var sound;
-var fadeCount = 0;
-var neighbourCollection = [];
-var isPlaying = false;
-var stopOnNextAnimationStep = false;
+var clickCount = 0;
 
 //Document ready function for when the page is ready.
 $(document).ready(function () {
@@ -40,16 +38,25 @@ $(document).ready(function () {
     point.height(imgWidth);
 
     //We want to handle mouse clicks.
+    var animation = null;
     $(document).click(function (e) {
-        calculateInitialPosition(e);
+        if(animation !== null && allowSimultaneousAnimations === false) {
+            if(animation.isPlaying() === true) {
+                animation.stopAnimation(true);
+            }
+        }
+        animation = new Animation(e);
     });
 });
 
-function calculateInitialPosition(eventParams) {
-    if (isPlaying) {
-        stopOnNextAnimationStep = true;
-    }
-    isPlaying = true;
+function Animation(eventParams) {
+    var clickID = clickCount++;
+    var currentDepth = implosionDepth;
+    var fadeCount = 0;
+    var neighbourCollection = [];
+    var isPlaying = true;
+    var stopOnNextAnimationStep = false;
+
     console.log("=================================================================");
     console.log("=================================================================");
     console.log("LOG: DEBUG ==> clicked x: " + eventParams.clientX + " y: " + eventParams.clientY);
@@ -95,140 +102,150 @@ function calculateInitialPosition(eventParams) {
     console.log("LOG: DEBUG ==> Nearest point is: " + exactX + "," + exactY);
     console.log("LOG: DEBUG ==> Starting selected point animation");
     //Clear the collections for fade and remove any old neighbours.
-    neighbourCollection = [];
     removeNeighbours();
     //Start the implosion effect.
-    animateImplosionEffect(implosionDepth, exactX, exactY);
-}
+    animateImplosionEffect();
 
-function animateImplosionEffect(depth, xCoord, yCoord) {
-    console.log("LOG: DEBUG ==> Animating implosion effect => depth : " + depth);
-    point.css({left: xCoord - imgHalf, top: yCoord - imgHalf});
-    point.show();
+    //Inner functions
+    function animateImplosionEffect() {
+        console.log("LOG: DEBUG ==> Animating implosion effect => depth : " + currentDepth);
+        point.css({left: exactX - imgHalf, top: exactY - imgHalf});
+        point.show();
 
-    //Each animation step has a given timeout.
-    setTimeout(function () {
-        if (depth === 0) {
-            //Set the selected point's location and make it visible.
-            //Top and Left of each image are 50 pixels before the center.
-            point.css({left: xCoord - imgHalf, top: yCoord - imgHalf});
-            point.show();
-            //Start animation moving the selected point.
-            animateFromSelection(xCoord, yCoord);
-            //Proceed with fading out the items.
-            fadeCount = implosionDepth;
-            recursiveFadeOut();
-        } else {
-            //Remove the previous neighbours.
-            //removeNeighbours();
-            //Calculate (according to the set strategy) and show the next neighbours.
-            neighbourCollection.push(showNeighbours(implosion.calculateNeighbours(depth), xCoord, yCoord, depth));
-            fadeOlderDepths(neighbourCollection, false);
-            //Continue to the next step in the animation.
-            animateImplosionEffect(--depth, xCoord, yCoord);
-        }
-
-    }, timeStep / 5);
-}
-
-function recursiveFadeOut() {
-    setTimeout(function () {
-        if (fadeOlderDepths(neighbourCollection, true)) {
-            recursiveFadeOut();
-        } else {
-            //Remove the previous neighbours.
-            removeNeighbours();
-        }
-    }, timeStep / 10);
-}
-
-function fadeOlderDepths(depthCollection, performStopCheck) {
-    console.log("LOG: DEBUG ==> Fading older depths.");
-    for (var i = 0; i < depthCollection.length; i++) {
-        var items = depthCollection[i];
-        for (var j = 0; j < items.length; j++) {
-            var item = items[j];
-            console.log();
-            var newOp = parseFloat(item.css('opacity'));
-            newOp = newOp <= 0.1 ? 0 : newOp - 0.1;
-            item.css({ opacity: newOp });
-
-            //Check to break of the fade is the last item to be faded is also at opacity 0!
-            if (j === (items.length - 1) && newOp === 0) {
-                //Replace the array of the already fully faded items with an empty array and remove those neighbours already.
-                removeNeighbours(depthCollection.length - i);
-                neighbourCollection[i] = [];
-            }
-        }
-    }
-    if(fadeCount < 1 && performStopCheck) {
-        return false;
-    } else {
-        fadeCount--;
-        return true;
-    }
-}
-
-function animateFromSelection(xCoord, yCoord) {
-    //Each animation step has a given timeout.
-    setTimeout(function () {
-        console.log("LOG: DEBUG ==> Animating point to new position.");
-        //Check to see if the animation has been completed! (when the point goes offscreen or the stopOnNextAnimationStep is true.
-        if (xCoord < 0 || yCoord < 0 || stopOnNextAnimationStep) {
-            console.log("LOG: DEBUG ==> Animation completed!");
-            if (stopOnNextAnimationStep) {
-                stopOnNextAnimationStep = false;
+        //Each animation step has a given timeout.
+        setTimeout(function () {
+            if (currentDepth === 0) {
+                //Set the selected point's location and make it visible.
+                //Top and Left of each image are 50 pixels before the center.
+                point.css({left: exactX - imgHalf, top: exactY - imgHalf});
+                point.show();
+                //Start animation moving the selected point.
+                animateFromSelection(exactX, exactY);
+                //Proceed with fading out the items.
+                fadeCount = implosionDepth;
+                recursiveFadeOut();
             } else {
-                isPlaying = false;
+                //Remove the previous neighbours.
+                //removeNeighbours();
+                //Calculate (according to the set strategy) and show the next neighbours.
+                neighbourCollection.push(showNeighbours(implosion.calculateNeighbours(currentDepth)));
+                fadeOlderDepths(neighbourCollection, false);
+                //Continue to the next step in the animation.
+                --currentDepth;
+                animateImplosionEffect();
             }
-            return;
-        }
 
-        var x = xCoord, y = yCoord;
-        //Small random generator trick to make the animation differ in motion a bit.
-        var rand = Math.floor((Math.random() * 10) + 1);
-        if (rand > 5) {
-            x -= imgWidth;
+        }, timeStep / 5);
+    }
+
+    function recursiveFadeOut() {
+        setTimeout(function () {
+            if (fadeOlderDepths(neighbourCollection, true)) {
+                recursiveFadeOut();
+            } else {
+                //Remove the previous neighbours.
+                removeNeighbours();
+            }
+        }, timeStep / 10);
+    }
+
+    function fadeOlderDepths(depthCollection, performStopCheck) {
+        console.log("LOG: DEBUG ==> Fading older depths.");
+        for (var i = 0; i < depthCollection.length; i++) {
+            var items = depthCollection[i];
+            for (var j = 0; j < items.length; j++) {
+                var item = items[j];
+                console.log();
+                var newOp = parseFloat(item.css('opacity'));
+                newOp = newOp <= 0.1 ? 0 : newOp - 0.1;
+                item.css({ opacity: newOp });
+
+                //Check to break of the fade is the last item to be faded is also at opacity 0!
+                if (j === (items.length - 1) && newOp === 0) {
+                    //Replace the array of the already fully faded items with an empty array and remove those neighbours already.
+                    removeNeighbours(depthCollection.length - i);
+                    neighbourCollection[i] = [];
+                }
+            }
+        }
+        if(fadeCount < 1 && performStopCheck) {
+            return false;
         } else {
-            y -= imgWidth;
+            fadeCount--;
+            return true;
         }
-        point.css({left: x - imgHalf, top: y - imgHalf});
+    }
 
-        //If the sound was previously playing, reset and play it again.
-        sound.currentTime = 0;
-        sound.play();
+    function animateFromSelection(xCoord, yCoord) {
+        //Each animation step has a given timeout.
+        setTimeout(function () {
+            console.log("LOG: DEBUG ==> Animating point to new position.");
+            //Check to see if the animation has been completed! (when the point goes offscreen or the stopOnNextAnimationStep is true.
+            if (xCoord < 0 || yCoord < 0 || stopOnNextAnimationStep) {
+                console.log("LOG: DEBUG ==> Animation completed!");
+                isPlaying = false;
+                if (stopOnNextAnimationStep) {
+                    stopOnNextAnimationStep = false;
+                }
+                return;
+            }
 
-        //Continue to the next step in the animation.
-        animateFromSelection(x, y);
-    }, timeStep);
-}
+            var x = xCoord, y = yCoord;
+            //Small random generator trick to make the animation differ in motion a bit.
+            var rand = Math.floor((Math.random() * 10) + 1);
+            if (rand > 5) {
+                x -= imgWidth;
+            } else {
+                y -= imgWidth;
+            }
+            point.css({left: x - imgHalf, top: y - imgHalf});
 
-function showNeighbours(points, xCoord, yCoord, depth) {
-    var items = [];
-    var pointsX = points[0];
-    var pointsY = points[1];
+            //If the sound was previously playing, reset and play it again.
+            sound.currentTime = 0;
+            sound.play();
 
-    for (var i = 0; i < pointsX.length; i++) {
-        var id = "nb-" + "d" + depth + "-" + (i + 1);
-        $('#point').clone().attr('id', id).appendTo('body');
-        var item = $('#' + id);
-        item.css({
-            left: (pointsX[i] * imgHalf) + xCoord - imgHalf,
-            top: (pointsY[i] * imgHalf) + yCoord - imgHalf,
-            opacity: 1
+            //Continue to the next step in the animation.
+            animateFromSelection(x, y);
+        }, timeStep);
+    }
+
+    function showNeighbours(points) {
+        var items = [];
+        var pointsX = points[0];
+        var pointsY = points[1];
+
+        for (var i = 0; i < pointsX.length; i++) {
+            var id = "nb-" + clickID + "-" + "d" + currentDepth + "-" + (i + 1);
+            $('#point').clone().attr('id', id).appendTo('body');
+            var item = $('#' + id);
+            item.css({
+                left: (pointsX[i] * imgHalf) + exactX - imgHalf,
+                top: (pointsY[i] * imgHalf) + exactY - imgHalf,
+                opacity: 1
+            });
+            items[i] = item;
+        }
+        return items;
+    }
+
+    function removeNeighbours(optionalDepth) {
+        var idString = "[id^=nb-" + clickID;
+        if (typeof optionalDepth !== "undefined") {
+            idString += "d" + optionalDepth + "-";
+        }
+        idString += "]";
+        $(idString).each(function () {
+            $(this).remove();
         });
-        items[i] = item;
     }
-    return items;
-}
 
-function removeNeighbours(optionalDepth) {
-    var idString = "[id^=nb-";
-    if (typeof optionalDepth !== "undefined") {
-        idString += "d" + optionalDepth + "-";
+    return {
+        isPlaying: function() {
+            return isPlaying;
+        },
+
+        stopAnimation: function(value) {
+            stopOnNextAnimationStep = value;
+        }
     }
-    idString += "]";
-    $(idString).each(function () {
-        $(this).remove();
-    });
 }
