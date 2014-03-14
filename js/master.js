@@ -171,7 +171,6 @@ function Animation(eventParams) {
             var items = depthCollection[i];
             for (var j = 0; j < items.length; j++) {
                 var item = items[j];
-                console.log();
                 var newOp = parseFloat(item.css('opacity'));
                 newOp = newOp <= 0.1 ? 0 : newOp - 0.1;
                 item.css({ opacity: newOp });
